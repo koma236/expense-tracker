@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Claude
+.claude/
+
+# Java / Gradle / Maven
+target/
+build/
+*.class
+*.jar
+*.war
+.gradle/
+
+# Node / React
+node_modules/
+dist/
+.next/
+*.log
+
+# Env
+.env
+.env.local
