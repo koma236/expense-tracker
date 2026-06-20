@@ -112,13 +112,32 @@ gh pr merge <PR番号> --squash --delete-branch
 
 ## プロジェクト固有コマンド
 
-スタックは Nuxt 3（フロント）/ Go（バックエンド）/ MySQL に確定済み。
-具体的なビルド・起動・テストコマンドは、プロジェクトのスキャフォールド（構成生成）後に追記する。
+モノレポ構成。`backend/`（Go: chi + sqlc）、`frontend/`（Nuxt 3）、ローカル DB は docker-compose（MySQL）。
+詳細は各ディレクトリの README（[backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md)）と [アーキテクチャ設計書](docs/architecture.md) を参照。
 
-```text
-TBD（スキャフォールド後に追記）
-- バックエンド（Go）:   go run ./... / go build / go test ./...
-- フロントエンド（Nuxt 3）: npm run dev / npm run build
+必要ツール: Go 1.22+ / Node.js 20+ / Docker / golang-migrate / sqlc
+（macOS: `brew install go node golang-migrate sqlc`）
+
+```bash
+# データベース（ローカル, 無料）— リポジトリルートで
+docker compose up -d
+
+# バックエンド（Go）
+cd backend
+cp .env.example .env
+go mod tidy
+migrate -path db/migrations -database "mysql://app:app@tcp(127.0.0.1:3306)/expense_tracker" up   # マイグレーション
+docker exec -i expense-tracker-mysql mysql -uapp -papp expense_tracker < db/seeds/0001_categories.sql  # 初期データ
+go run ./cmd/server          # 起動 → http://localhost:8080/api/health
+sqlc generate                # クエリ変更時にコード再生成
+go build ./... && go vet ./...
+
+# フロントエンド（Nuxt 3）
+cd frontend
+cp .env.example .env
+npm install
+npm run dev                  # http://localhost:3000
+npm run build
 ```
 
 ---
