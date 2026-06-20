@@ -127,7 +127,7 @@ cd backend
 cp .env.example .env
 go mod tidy
 migrate -path db/migrations -database "mysql://app:app@tcp(127.0.0.1:3306)/expense_tracker" up   # マイグレーション
-docker exec -i expense-tracker-mysql mysql -uapp -papp expense_tracker < db/seeds/0001_categories.sql  # 初期データ
+docker exec -i expense-tracker-mysql mysql --default-character-set=utf8mb4 -uapp -papp expense_tracker < db/seeds/0001_categories.sql  # 初期データ（日本語文字化け防止に utf8mb4 指定が必須）
 go run ./cmd/server          # 起動 → http://localhost:8080/api/health
 sqlc generate                # クエリ変更時にコード再生成
 go build ./... && go vet ./...
