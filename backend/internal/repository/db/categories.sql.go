@@ -9,6 +9,25 @@ import (
 	"context"
 )
 
+const getCategory = `-- name: GetCategory :one
+SELECT id, name, type, created_at, updated_at
+FROM categories
+WHERE id = ?
+`
+
+func (q *Queries) GetCategory(ctx context.Context, id int64) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategory, id)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listCategories = `-- name: ListCategories :many
 SELECT id, name, type, created_at, updated_at
 FROM categories
@@ -17,6 +36,46 @@ ORDER BY type, name
 
 func (q *Queries) ListCategories(ctx context.Context) ([]Category, error) {
 	rows, err := q.db.QueryContext(ctx, listCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Category{}
+	for rows.Next() {
+		var i Category
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Type,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCategoriesByType = `-- name: ListCategoriesByType :many
+SELECT id, name, type, created_at, updated_at
+FROM categories
+WHERE (? IS NULL OR type = ?)
+ORDER BY type, name
+`
+
+type ListCategoriesByTypeParams struct {
+	Type NullCategoriesType `json:"type"`
+}
+
+func (q *Queries) ListCategoriesByType(ctx context.Context, arg ListCategoriesByTypeParams) ([]Category, error) {
+	rows, err := q.db.QueryContext(ctx, listCategoriesByType, arg.Type, arg.Type)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,14 @@ import (
 )
 
 type Querier interface {
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
+	DeleteTransaction(ctx context.Context, id int64) (int64, error)
+	GetCategory(ctx context.Context, id int64) (Category, error)
+	GetTransaction(ctx context.Context, id int64) (GetTransactionRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
+	ListCategoriesByType(ctx context.Context, arg ListCategoriesByTypeParams) ([]Category, error)
+	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]ListTransactionsRow, error)
+	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)
