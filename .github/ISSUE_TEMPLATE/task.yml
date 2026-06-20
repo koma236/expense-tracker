@@ -1,0 +1,61 @@
+name: 開発タスク
+description: 機能追加・バグ以外の開発タスク（リファクタリング・環境整備など）
+title: "[Task] "
+labels: ["chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        開発タスクの記録です。作業内容と完了条件を明確に定義してください。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: タスクの概要
+      description: 何をするのか簡潔に説明してください
+      placeholder: 例：Lint / フォーマッタの設定を追加する
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: カテゴリ
+      options:
+        - リファクタリング
+        - 環境整備・設定
+        - テスト追加
+        - ドキュメント更新
+        - 依存パッケージ更新
+        - CI/CD
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: 詳細・作業内容
+      description: 具体的に何をするか記載してください
+      placeholder: |
+        - 設定ファイルを作成する
+        - 実行用のスクリプトを追加する
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足
+    validations:
+      required: false
