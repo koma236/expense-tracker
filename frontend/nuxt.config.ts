@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
+  modules: ['@nuxtjs/tailwindcss'],
   runtimeConfig: {
     public: {
       // バックエンド API のベース URL。NUXT_PUBLIC_API_BASE で上書き可能。

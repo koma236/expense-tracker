@@ -32,8 +32,9 @@ migrate -path db/migrations \
   -database "mysql://app:app@tcp(127.0.0.1:3306)/expense_tracker" up
 
 # 5. 初期データ投入（シード）
+#    日本語が文字化けしないよう --default-character-set=utf8mb4 を必ず付ける
 docker exec -i expense-tracker-mysql \
-  mysql -uapp -papp expense_tracker < db/seeds/0001_categories.sql
+  mysql --default-character-set=utf8mb4 -uapp -papp expense_tracker < db/seeds/0001_categories.sql
 
 # 6. 起動
 go run ./cmd/server

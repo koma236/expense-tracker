@@ -16,17 +16,19 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/koma236/expense-tracker/backend/internal/handler"
+	db "github.com/koma236/expense-tracker/backend/internal/repository/db"
+	"github.com/koma236/expense-tracker/backend/internal/service"
 )
 
 func main() {
 	// .env を読み込む（存在しなくてもエラーにしない）
 	_ = godotenv.Load()
 
-	db, err := openDB()
+	sqlDB, err := openDB()
 	if err != nil {
 		log.Fatalf("DB の初期化に失敗しました: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -38,9 +40,21 @@ func main() {
 		AllowCredentials: false,
 	}))
 
-	health := handler.NewHealthHandler(db)
+	queries := db.New(sqlDB)
+	health := handler.NewHealthHandler(sqlDB)
+	categoryH := handler.NewCategoryHandler(queries)
+	txH := handler.NewTransactionHandler(service.NewTransactionService(queries))
+
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health", health.Health)
+		r.Get("/categories", categoryH.List)
+		r.Route("/transactions", func(r chi.Router) {
+			r.Get("/", txH.List)
+			r.Post("/", txH.Create)
+			r.Get("/{id}", txH.Get)
+			r.Put("/{id}", txH.Update)
+			r.Delete("/{id}", txH.Delete)
+		})
 	})
 
 	addr := ":" + getEnv("APP_PORT", "8080")
