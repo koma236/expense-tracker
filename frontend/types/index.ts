@@ -26,6 +26,12 @@ export interface Transaction {
   updated_at: string
 }
 
+// カテゴリの作成/更新リクエスト本体。
+export interface CategoryInput {
+  name: string
+  type: TxType
+}
+
 // 取引の作成/更新リクエスト本体。
 export interface TransactionInput {
   occurred_on: string

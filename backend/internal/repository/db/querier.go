@@ -9,13 +9,19 @@ import (
 )
 
 type Querier interface {
+	CountCategoryByNameType(ctx context.Context, arg CountCategoryByNameTypeParams) (int64, error)
+	CountCategoryByNameTypeExcludingID(ctx context.Context, arg CountCategoryByNameTypeExcludingIDParams) (int64, error)
+	CountCategoryUsage(ctx context.Context, arg CountCategoryUsageParams) (int32, error)
+	CreateCategory(ctx context.Context, arg CreateCategoryParams) (int64, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
+	DeleteCategory(ctx context.Context, id int64) (int64, error)
 	DeleteTransaction(ctx context.Context, id int64) (int64, error)
 	GetCategory(ctx context.Context, id int64) (Category, error)
 	GetTransaction(ctx context.Context, id int64) (GetTransactionRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListCategoriesByType(ctx context.Context, arg ListCategoriesByTypeParams) ([]Category, error)
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]ListTransactionsRow, error)
+	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (int64, error)
 	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (int64, error)
 }
 

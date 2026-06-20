@@ -1,4 +1,4 @@
-import type { Category, Transaction, TransactionInput, TxType } from '~/types'
+import type { Category, CategoryInput, Transaction, TransactionInput, TxType } from '~/types'
 
 // 取引・カテゴリ API の型付きラッパ。各画面はこれを経由して呼び出す。
 export function useExpenseApi() {
@@ -10,6 +10,11 @@ export function useExpenseApi() {
       const qs = type ? `?type=${type}` : ''
       return api.get<{ categories: Category[] }>(`/categories${qs}`).then((r) => r.categories)
     },
+
+    createCategory: (input: CategoryInput) => api.post<Category>('/categories', input),
+    updateCategory: (id: number, input: CategoryInput) =>
+      api.put<Category>(`/categories/${id}`, input),
+    deleteCategory: (id: number) => api.delete<{ deleted: boolean }>(`/categories/${id}`),
 
     // 取引一覧（対象月・種別・カテゴリで絞り込み）
     listTransactions: (params: { yearMonth: string; type?: TxType; categoryId?: number }) => {
