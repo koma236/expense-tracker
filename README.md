@@ -11,3 +11,7 @@
 - バックエンド: Go
 - データベース: MySQL / MariaDB
 - デプロイ: AWS EC2 (アプリ) / RDS (MySQL)
+
+## ドキュメント
+
+- [要件定義書](docs/requirements.md)
