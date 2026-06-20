@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: プロジェクト概要（README）
+    url: https://github.com/koma236/expense-tracker/blob/main/README.md
+    about: プロジェクトの概要はこちらを参照してください（要件定義書の作成後に差し替え予定）

@@ -1,0 +1,47 @@
+name: 機能追加
+description: 新しい機能のリクエスト
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新機能のリクエストです。できるだけ詳しく記入してください。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 追加したい機能を簡潔に説明してください
+      placeholder: 例：支出にカテゴリを設定できるようにする
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 目的・背景
+      description: なぜこの機能が必要ですか？
+      placeholder: 例：費目ごとの支出を集計したいため
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: この機能が完成したと判断する条件を列挙してください
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足・参考情報
+      description: スクリーンショット、参考リンク、技術的な制約など（任意）
+    validations:
+      required: false
