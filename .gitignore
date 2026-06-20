@@ -24,6 +24,16 @@ dist/
 .next/
 *.log
 
+# Nuxt
+.nuxt/
+.output/
+.data/
+
+# Go
+/backend/server
+*.test
+*.out
+
 # Env
 .env
 .env.local
