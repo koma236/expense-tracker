@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# prepare-commit-msg フック
+# コミットメッセージに Cursor / Claude の Co-Authored-By トレーラーを自動付与する。
+# 既に同じトレーラーが含まれている場合は重複して追加しない。
+#
+# 有効化（リポジトリのクローンごとに一度だけ実行）:
+#   git config core.hooksPath .githooks
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# squash / merge / 既存コミットの編集（amend, rebase 等）では追記しない
+case "$COMMIT_SOURCE" in
+  squash|merge)
+    exit 0
+    ;;
+esac
+
+CURSOR_TRAILER="Co-Authored-By: Cursor Agent <cursoragent@cursor.com>"
+CLAUDE_TRAILER="Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# 大文字小文字を無視して既存トレーラーの有無を判定
+add_trailer_if_missing() {
+  email="$1"
+  trailer="$2"
+  if ! grep -qiF "$email" "$COMMIT_MSG_FILE"; then
+    printf '%s\n' "$trailer" >> "$COMMIT_MSG_FILE"
+  fi
+}
+
+# 末尾が空行でなければ空行を1つ挟んでからトレーラーを追記する
+ensure_blank_line() {
+  if [ -s "$COMMIT_MSG_FILE" ] && [ -n "$(tail -n 1 "$COMMIT_MSG_FILE")" ]; then
+    printf '\n' >> "$COMMIT_MSG_FILE"
+  fi
+}
+
+if ! grep -qiF "cursoragent@cursor.com" "$COMMIT_MSG_FILE" \
+   || ! grep -qiF "noreply@anthropic.com" "$COMMIT_MSG_FILE"; then
+  ensure_blank_line
+  add_trailer_if_missing "cursoragent@cursor.com" "$CURSOR_TRAILER"
+  add_trailer_if_missing "noreply@anthropic.com" "$CLAUDE_TRAILER"
+fi
+
+exit 0

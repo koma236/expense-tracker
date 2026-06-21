@@ -100,6 +100,28 @@ gh pr merge <PR番号> --squash --delete-branch
 
 ---
 
+## コミットの共同作成者（Cursor / Claude）
+
+GitHub のコントリビューターとして Cursor / Claude を表示させるため、`.githooks/prepare-commit-msg` フックで全コミットに以下のトレーラーを自動付与する。
+
+```
+Co-Authored-By: Cursor Agent <cursoragent@cursor.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**クローンごとに一度だけ有効化が必要**（git フックは共有されないため）:
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/prepare-commit-msg   # 新規クローン時は git の実行ビットで既に付与済みの場合あり
+```
+
+- 既に同じトレーラーがある場合は重複追加しない（冪等）
+- `squash` / `merge` 由来のメッセージには追記しない
+- 共同作成者として表示はされるが、クリック可能なプロフィールにするには各メールが GitHub アカウントに紐づいている必要がある
+
+---
+
 ## よくある間違いと対処法
 
 | 間違い | 正しい対応 |
