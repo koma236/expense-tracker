@@ -44,6 +44,7 @@ func main() {
 	health := handler.NewHealthHandler(sqlDB)
 	categoryH := handler.NewCategoryHandler(service.NewCategoryService(queries))
 	txH := handler.NewTransactionHandler(service.NewTransactionService(queries))
+	summaryH := handler.NewSummaryHandler(service.NewSummaryService(queries))
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health", health.Health)
@@ -59,6 +60,10 @@ func main() {
 			r.Get("/{id}", txH.Get)
 			r.Put("/{id}", txH.Update)
 			r.Delete("/{id}", txH.Delete)
+		})
+		r.Route("/summary", func(r chi.Router) {
+			r.Get("/", summaryH.Get)
+			r.Get("/trend", summaryH.Trend)
 		})
 	})
 
