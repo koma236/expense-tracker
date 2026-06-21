@@ -7,7 +7,94 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
+
+const countCategoryByNameType = `-- name: CountCategoryByNameType :one
+SELECT COUNT(*) AS cnt
+FROM categories
+WHERE name = ? AND type = ?
+`
+
+type CountCategoryByNameTypeParams struct {
+	Name string         `json:"name"`
+	Type CategoriesType `json:"type"`
+}
+
+func (q *Queries) CountCategoryByNameType(ctx context.Context, arg CountCategoryByNameTypeParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCategoryByNameType, arg.Name, arg.Type)
+	var cnt int64
+	err := row.Scan(&cnt)
+	return cnt, err
+}
+
+const countCategoryByNameTypeExcludingID = `-- name: CountCategoryByNameTypeExcludingID :one
+SELECT COUNT(*) AS cnt
+FROM categories
+WHERE name = ? AND type = ? AND id <> ?
+`
+
+type CountCategoryByNameTypeExcludingIDParams struct {
+	Name string         `json:"name"`
+	Type CategoriesType `json:"type"`
+	ID   int64          `json:"id"`
+}
+
+func (q *Queries) CountCategoryByNameTypeExcludingID(ctx context.Context, arg CountCategoryByNameTypeExcludingIDParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCategoryByNameTypeExcludingID, arg.Name, arg.Type, arg.ID)
+	var cnt int64
+	err := row.Scan(&cnt)
+	return cnt, err
+}
+
+const countCategoryUsage = `-- name: CountCategoryUsage :one
+SELECT
+  (SELECT COUNT(*) FROM transactions t WHERE t.category_id = ?) +
+  (SELECT COUNT(*) FROM budgets b WHERE b.category_id = ?) AS usage_count
+`
+
+type CountCategoryUsageParams struct {
+	CategoryID   int64         `json:"category_id"`
+	CategoryID_2 sql.NullInt64 `json:"category_id_2"`
+}
+
+func (q *Queries) CountCategoryUsage(ctx context.Context, arg CountCategoryUsageParams) (int32, error) {
+	row := q.db.QueryRowContext(ctx, countCategoryUsage, arg.CategoryID, arg.CategoryID_2)
+	var usage_count int32
+	err := row.Scan(&usage_count)
+	return usage_count, err
+}
+
+const createCategory = `-- name: CreateCategory :execlastid
+INSERT INTO categories (name, type)
+VALUES (?, ?)
+`
+
+type CreateCategoryParams struct {
+	Name string         `json:"name"`
+	Type CategoriesType `json:"type"`
+}
+
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, createCategory, arg.Name, arg.Type)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+const deleteCategory = `-- name: DeleteCategory :execrows
+DELETE FROM categories
+WHERE id = ?
+`
+
+func (q *Queries) DeleteCategory(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteCategory, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
 
 const getCategory = `-- name: GetCategory :one
 SELECT id, name, type, created_at, updated_at
@@ -101,4 +188,24 @@ func (q *Queries) ListCategoriesByType(ctx context.Context, arg ListCategoriesBy
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateCategory = `-- name: UpdateCategory :execrows
+UPDATE categories
+SET name = ?, type = ?
+WHERE id = ?
+`
+
+type UpdateCategoryParams struct {
+	Name string         `json:"name"`
+	Type CategoriesType `json:"type"`
+	ID   int64          `json:"id"`
+}
+
+func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updateCategory, arg.Name, arg.Type, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
