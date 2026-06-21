@@ -41,6 +41,38 @@ export interface TransactionInput {
   memo: string | null
 }
 
+// 集計サマリ（api-spec §5.1）。
+export interface SummaryTotals {
+  income: number
+  expense: number
+  balance: number
+}
+
+export interface ExpenseByCategory {
+  category: CategoryRef
+  total: number
+}
+
+export interface Summary {
+  year_month: string
+  totals: SummaryTotals
+  expense_by_category: ExpenseByCategory[]
+  // budget_progress は F-4 で利用。現状はバックエンドから空配列が返る。
+  budget_progress: unknown[]
+}
+
+// 月別収支推移の1点。
+export interface TrendPoint {
+  year_month: string // YYYY-MM
+  income: number
+  expense: number
+  balance: number
+}
+
+export interface Trend {
+  months: TrendPoint[]
+}
+
 // API 共通エラー形式（api-spec §1.2）。
 export interface ApiFieldError {
   field: string

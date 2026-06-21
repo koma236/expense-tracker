@@ -1,4 +1,13 @@
-import type { Category, CategoryInput, Transaction, TransactionInput, TxType } from '~/types'
+import type {
+  Category,
+  CategoryInput,
+  Summary,
+  Transaction,
+  TransactionInput,
+  Trend,
+  TrendPoint,
+  TxType,
+} from '~/types'
 
 // 取引・カテゴリ API の型付きラッパ。各画面はこれを経由して呼び出す。
 export function useExpenseApi() {
@@ -31,5 +40,15 @@ export function useExpenseApi() {
     updateTransaction: (id: number, input: TransactionInput) =>
       api.put<Transaction>(`/transactions/${id}`, input),
     deleteTransaction: (id: number) => api.delete<{ deleted: boolean }>(`/transactions/${id}`),
+
+    // 対象月のサマリ（収支合計・カテゴリ別支出）
+    getSummary: (yearMonth: string) =>
+      api.get<Summary>(`/summary?year_month=${yearMonth}`),
+
+    // 月別収支推移（既定で対象月を末尾に過去6ヶ月）
+    getTrend: (yearMonth: string, months = 6): Promise<TrendPoint[]> =>
+      api
+        .get<Trend>(`/summary/trend?year_month=${yearMonth}&months=${months}`)
+        .then((r) => r.months),
   }
 }
