@@ -44,7 +44,27 @@ Browser ──HTTP──▶ nginx (EC2:80)
 
 ---
 
-## 2. RDS（MySQL）を作成する
+## 2. インフラを作成する（Terraform / 推奨）
+
+EC2・RDS・セキュリティグループは Terraform でまとめて作成できる。詳細は [terraform/README.md](../terraform/README.md) を参照。
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# ssh_cidr（自分のIP/32）と db_password を設定
+terraform init
+terraform plan
+terraform apply        # ← EC2/RDS が作成され課金が発生する
+```
+
+`apply` 後、出力（`terraform output`）に **EC2 のパブリック DNS** と **RDS エンドポイント** が表示される。
+これらを使って §6 以降（DB セットアップ・アプリ配置）へ進む。インフラを Terraform で作成した場合、下記 §3〜§5（コンソールでの手動作成・基本ミドルウェア導入）は**不要**（ミドルウェアと swap は EC2 の user_data で導入済み）。
+
+> 後片付け（課金を完全に止める）: `cd terraform && terraform destroy`
+
+---
+
+## 2-alt. RDS（MySQL）を手動で作成する（Terraform を使わない場合）
 
 AWS コンソール → RDS → 「データベースの作成」。
 
