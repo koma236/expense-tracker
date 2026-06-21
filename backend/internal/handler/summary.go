@@ -30,13 +30,22 @@ type expenseByCategoryItem struct {
 	Total    int64       `json:"total"`
 }
 
+// budgetProgressItem は api-spec §5.1 の budget_progress[] 要素。
+// category は月全体予算の場合 null。
+type budgetProgressItem struct {
+	Category *categoryRef `json:"category"`
+	Budget   int64        `json:"budget"`
+	Spent    int64        `json:"spent"`
+	Ratio    float64      `json:"ratio"`
+	Status   string       `json:"status"`
+}
+
 // summaryResponse は GET /api/summary のレスポンス形。
-// budget_progress は F-4 で実装するため、現状は常に空配列を返す。
 type summaryResponse struct {
 	YearMonth         string                  `json:"year_month"`
 	Totals            totalsResponse          `json:"totals"`
 	ExpenseByCategory []expenseByCategoryItem `json:"expense_by_category"`
-	BudgetProgress    []any                   `json:"budget_progress"`
+	BudgetProgress    []budgetProgressItem    `json:"budget_progress"`
 }
 
 // Get は GET /api/summary。
@@ -55,6 +64,17 @@ func (h *SummaryHandler) Get(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	progress := make([]budgetProgressItem, 0, len(res.BudgetProgress))
+	for _, p := range res.BudgetProgress {
+		progress = append(progress, budgetProgressItem{
+			Category: categoryRefFromNull(p.CategoryID, p.CategoryValid, p.CategoryName),
+			Budget:   p.Budget,
+			Spent:    p.Spent,
+			Ratio:    p.Ratio,
+			Status:   p.Status,
+		})
+	}
+
 	writeJSON(w, http.StatusOK, summaryResponse{
 		YearMonth: res.YearMonth,
 		Totals: totalsResponse{
@@ -63,7 +83,7 @@ func (h *SummaryHandler) Get(w http.ResponseWriter, r *http.Request) {
 			Balance: res.Totals.Balance,
 		},
 		ExpenseByCategory: items,
-		BudgetProgress:    []any{},
+		BudgetProgress:    progress,
 	})
 }
 

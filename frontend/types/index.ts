@@ -53,12 +53,40 @@ export interface ExpenseByCategory {
   total: number
 }
 
+// 予算の消化状態（接近閾値未満 / 接近 / 超過）。
+export type BudgetStatus = 'under' | 'near' | 'over'
+
+// 予算進捗（api-spec §5.1）。category が null の場合は月全体予算。
+export interface BudgetProgress {
+  category: CategoryRef | null
+  budget: number
+  spent: number
+  ratio: number
+  status: BudgetStatus
+}
+
 export interface Summary {
   year_month: string
   totals: SummaryTotals
   expense_by_category: ExpenseByCategory[]
-  // budget_progress は F-4 で利用。現状はバックエンドから空配列が返る。
-  budget_progress: unknown[]
+  budget_progress: BudgetProgress[]
+}
+
+// 予算（api-spec §4）。category が null の場合は月全体予算。
+export interface Budget {
+  id: number
+  category: CategoryRef | null
+  year_month: string
+  amount: number
+  created_at: string
+  updated_at: string
+}
+
+// 予算の作成リクエスト本体。category_id 省略/null で月全体予算。
+export interface BudgetInput {
+  category_id?: number | null
+  year_month: string
+  amount: number
 }
 
 // 月別収支推移の1点。

@@ -2,9 +2,13 @@ package service
 
 import (
 	"context"
+	"math"
 
 	db "github.com/koma236/expense-tracker/backend/internal/repository/db"
 )
+
+// nearThreshold は予算の「接近」と判定する消化率（既定80%）。
+const nearThreshold = 0.8
 
 // SummaryService は集計（サマリ・カテゴリ別支出・月別推移）を担う。
 type SummaryService struct {
@@ -29,11 +33,24 @@ type CategoryAmount struct {
 	Total        int64
 }
 
+// BudgetProgressItem は予算に対する消化状況の1件。
+// 月全体予算は CategoryValid=false（CategoryID/CategoryName は無効）。
+type BudgetProgressItem struct {
+	CategoryID    int64
+	CategoryName  string
+	CategoryValid bool
+	Budget        int64
+	Spent         int64
+	Ratio         float64
+	Status        string // "under" / "near" / "over"
+}
+
 // SummaryResult は対象月のサマリ集計結果。
 type SummaryResult struct {
 	YearMonth         string
 	Totals            Totals
 	ExpenseByCategory []CategoryAmount
+	BudgetProgress    []BudgetProgressItem
 }
 
 // TrendPoint は月別収支推移の1点。
@@ -69,6 +86,11 @@ func (s *SummaryService) Summary(ctx context.Context, yearMonth string) (Summary
 		})
 	}
 
+	progress, err := s.budgetProgress(ctx, start.Format("2006-01"), totalsRow.Expense, byCategory)
+	if err != nil {
+		return SummaryResult{}, err
+	}
+
 	return SummaryResult{
 		YearMonth: start.Format("2006-01"),
 		Totals: Totals{
@@ -77,7 +99,62 @@ func (s *SummaryService) Summary(ctx context.Context, yearMonth string) (Summary
 			Balance: totalsRow.Income - totalsRow.Expense,
 		},
 		ExpenseByCategory: byCategory,
+		BudgetProgress:    progress,
 	}, nil
+}
+
+// budgetProgress は対象月の予算に対する消化状況を組み立てる。
+// 予算未設定の場合は空（予算のあるカテゴリ／月全体のみ含める）。
+func (s *SummaryService) budgetProgress(ctx context.Context, yearMonth string, totalExpense int64, byCategory []CategoryAmount) ([]BudgetProgressItem, error) {
+	budgets, err := s.q.ListBudgets(ctx, yearMonth)
+	if err != nil {
+		return nil, err
+	}
+
+	// カテゴリ別支出を引きやすいよう map 化。
+	spentByCategory := make(map[int64]int64, len(byCategory))
+	for _, c := range byCategory {
+		spentByCategory[c.CategoryID] = c.Total
+	}
+
+	items := make([]BudgetProgressItem, 0, len(budgets))
+	for _, b := range budgets {
+		var spent int64
+		item := BudgetProgressItem{Budget: int64(b.Amount)}
+		if b.CategoryID.Valid {
+			item.CategoryID = b.CategoryID.Int64
+			item.CategoryName = b.CategoryName.String
+			item.CategoryValid = true
+			spent = spentByCategory[b.CategoryID.Int64]
+		} else {
+			spent = totalExpense
+		}
+		item.Spent = spent
+		item.Ratio = ratio(spent, item.Budget)
+		item.Status = budgetStatus(item.Ratio)
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// ratio は spent/budget を小数第2位で丸めて返す。budget<=0 は 0。
+func ratio(spent, budget int64) float64 {
+	if budget <= 0 {
+		return 0
+	}
+	return math.Round(float64(spent)/float64(budget)*100) / 100
+}
+
+// budgetStatus は消化率から状態（under/near/over）を判定する。
+func budgetStatus(r float64) string {
+	switch {
+	case r > 1.0:
+		return "over"
+	case r >= nearThreshold:
+		return "near"
+	default:
+		return "under"
+	}
 }
 
 // Trend は対象月を末尾に、過去 months ヶ月分の収支推移を古い順で返す。
