@@ -61,9 +61,13 @@ const { label, prev, next } = useMonth()
             </NuxtLink>
           </li>
           <li>
-            <span class="inline-block px-3 py-2 text-gray-300 cursor-not-allowed" title="今後実装予定">
+            <NuxtLink
+              to="/budgets"
+              class="inline-block px-3 py-2 border-b-2 border-transparent hover:text-indigo-600"
+              active-class="!border-indigo-600 text-indigo-600 font-medium"
+            >
               予算
-            </span>
+            </NuxtLink>
           </li>
         </ul>
       </nav>

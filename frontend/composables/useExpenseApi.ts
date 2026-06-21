@@ -1,4 +1,6 @@
 import type {
+  Budget,
+  BudgetInput,
   Category,
   CategoryInput,
   Summary,
@@ -40,6 +42,17 @@ export function useExpenseApi() {
     updateTransaction: (id: number, input: TransactionInput) =>
       api.put<Transaction>(`/transactions/${id}`, input),
     deleteTransaction: (id: number) => api.delete<{ deleted: boolean }>(`/transactions/${id}`),
+
+    // 予算一覧（対象月）
+    listBudgets: (yearMonth: string) =>
+      api
+        .get<{ budgets: Budget[] }>(`/budgets?year_month=${yearMonth}`)
+        .then((r) => r.budgets),
+
+    createBudget: (input: BudgetInput) => api.post<Budget>('/budgets', input),
+    updateBudget: (id: number, amount: number) =>
+      api.put<Budget>(`/budgets/${id}`, { amount }),
+    deleteBudget: (id: number) => api.delete<{ deleted: boolean }>(`/budgets/${id}`),
 
     // 対象月のサマリ（収支合計・カテゴリ別支出）
     getSummary: (yearMonth: string) =>

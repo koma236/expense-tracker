@@ -9,21 +9,31 @@ import (
 )
 
 type Querier interface {
+	// カテゴリ別予算の重複チェック。
+	CountCategoryBudget(ctx context.Context, arg CountCategoryBudgetParams) (int64, error)
 	CountCategoryByNameType(ctx context.Context, arg CountCategoryByNameTypeParams) (int64, error)
 	CountCategoryByNameTypeExcludingID(ctx context.Context, arg CountCategoryByNameTypeExcludingIDParams) (int64, error)
 	CountCategoryUsage(ctx context.Context, arg CountCategoryUsageParams) (int32, error)
+	// 月全体予算（category_id IS NULL）の重複チェック。
+	// MySQL の UNIQUE 制約は NULL の重複を許すため、アプリ側でも検査する。
+	CountMonthWideBudget(ctx context.Context, yearMonth string) (int64, error)
+	CreateBudget(ctx context.Context, arg CreateBudgetParams) (int64, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (int64, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (int64, error)
+	DeleteBudget(ctx context.Context, id int64) (int64, error)
 	DeleteCategory(ctx context.Context, id int64) (int64, error)
 	DeleteTransaction(ctx context.Context, id int64) (int64, error)
+	GetBudget(ctx context.Context, id int64) (GetBudgetRow, error)
 	GetCategory(ctx context.Context, id int64) (Category, error)
 	GetMonthlyTotals(ctx context.Context, arg GetMonthlyTotalsParams) (GetMonthlyTotalsRow, error)
 	GetTransaction(ctx context.Context, id int64) (GetTransactionRow, error)
+	ListBudgets(ctx context.Context, yearMonth string) ([]ListBudgetsRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListCategoriesByType(ctx context.Context, arg ListCategoriesByTypeParams) ([]Category, error)
 	ListExpenseByCategory(ctx context.Context, arg ListExpenseByCategoryParams) ([]ListExpenseByCategoryRow, error)
 	ListMonthlyTrend(ctx context.Context, arg ListMonthlyTrendParams) ([]ListMonthlyTrendRow, error)
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]ListTransactionsRow, error)
+	UpdateBudget(ctx context.Context, arg UpdateBudgetParams) (int64, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (int64, error)
 	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (int64, error)
 }

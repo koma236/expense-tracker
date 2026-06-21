@@ -50,10 +50,8 @@ const hasError = computed(() => Boolean(summaryError.value || trendError.value))
         </ClientOnly>
       </div>
 
-      <!-- 予算進捗（F-4 で実装予定） -->
-      <div class="mt-4 bg-white rounded-lg border p-4 text-sm text-gray-400">
-        予算進捗は今後実装予定です（F-4）。
-      </div>
+      <!-- 予算進捗 -->
+      <BudgetProgress :items="summary?.budget_progress ?? []" class="mt-4" />
     </template>
   </div>
 </template>
