@@ -28,6 +28,7 @@ dist/
 .nuxt/
 .output/
 .data/
+frontend/dist
 
 # Go
 /backend/server
