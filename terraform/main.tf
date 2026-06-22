@@ -44,12 +44,13 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = [var.ssh_cidr]
   }
 
+  # HTTP(80) は CloudFront からのみ許可（直接インターネットから叩かせない）
   ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "HTTP from CloudFront"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
 
   egress {
@@ -108,6 +109,15 @@ resource "aws_instance" "app" {
   }
 
   tags = { Name = "${var.project}-ec2" }
+}
+
+# Elastic IP: CloudFront のオリジンを安定化するため固定アドレスを割り当てる。
+# 都度起動で EC2 を停止/起動してもアドレス（および public_dns）が変わらない。
+resource "aws_eip" "app" {
+  domain   = "vpc"
+  instance = aws_instance.app.id
+
+  tags = { Name = "${var.project}-eip" }
 }
 
 # ---- RDS（MySQL）-----------------------------------------------------------
