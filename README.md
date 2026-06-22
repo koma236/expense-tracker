@@ -62,6 +62,12 @@ npm run dev             # → http://localhost:3000
 
 詳しい手順・各層の構成は [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) を参照。
 
+## デプロイ
+
+本番は **AWS EC2（アプリ）+ RDS（MySQL）** 構成。学習用課題のためコストを抑え、**EC2 は使うときだけ起動する「都度起動」運用**とする。EC2 上では Docker を使わず、Go はバイナリ＋systemd、Nuxt は静的SPA を nginx で配信し、`/api` を Go API へリバースプロキシする（同一オリジンのため CORS 不要）。
+
+手順の詳細・コスト方針・起動/停止の運用は [デプロイ手順書](docs/deploy.md) を参照。デプロイ用ファイルは [deploy/](deploy/) にある。
+
 ## ドキュメント
 
 - [要件定義書](docs/requirements.md)

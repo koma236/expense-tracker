@@ -28,6 +28,7 @@ dist/
 .nuxt/
 .output/
 .data/
+frontend/dist
 
 # Go
 /backend/server
@@ -37,3 +38,13 @@ dist/
 # Env
 .env
 .env.local
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+!*.tfvars.example
+crash.log
