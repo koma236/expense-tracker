@@ -6,9 +6,23 @@ ExpenseTracker の本番インフラ（EC2 アプリサーバ + RDS MySQL）を 
 ## 作成されるもの
 
 - セキュリティグループ 2つ（EC2 用 / RDS 用）
-- EC2（Ubuntu 24.04, 既定 `t3.micro`、初回起動で基本ミドルウェア＋swap を導入）
+- EC2（Ubuntu 24.04, 既定 `t3.micro`、初回起動で基本ミドルウェア＋swap を導入）＋ Elastic IP
 - RDS（MySQL 8.0, 既定 `db.t3.micro`、パブリックアクセス無効、EC2 SG からのみ 3306 許可）
+- **S3**（フロント配信用, 完全非公開・CloudFront OAC 経由のみ）
+- **CloudFront**（公開URL=`*.cloudfront.net` / HTTPS。`/*`→S3, `/api/*`→EC2）
 - 既存 VPC（デフォルト VPC）と既存キーペア `my-aws-key` を利用
+
+### 配信構成（CloudFront + S3）
+
+```
+Browser ──HTTPS──▶ CloudFront (*.cloudfront.net)
+                    ├─ /*     → S3（フロント静的SPA, 非公開/OAC, キャッシュ有）
+                    └─ /api/* → EC2:80(nginx) → Go:8080 → RDS（キャッシュ無）
+```
+
+- EC2 の 80 番は CloudFront の origin-facing プレフィックスリストのみ許可（直接アクセス不可）。
+- CloudFront オリジンは **Elastic IP の DNS** を使うため、EC2 を停止/起動してもオリジンが安定する。
+- SPA ルーティングは CloudFront Function（拡張子なしパス→`/index.html`）で対応。
 
 ## 前提
 
@@ -30,8 +44,16 @@ terraform plan      # 作成内容の確認（リソースは作られない）
 terraform apply     # ← ここで EC2/RDS が作成され課金が発生する
 ```
 
-`apply` 後、出力に EC2 のパブリック DNS と RDS エンドポイントが表示される。
-続けて [../docs/deploy.md](../docs/deploy.md) の「アプリ配置」以降を実施する。
+`apply` 後、出力に CloudFront URL・EC2 の DNS・RDS エンドポイント・S3 バケット名が表示される。
+
+```bash
+terraform output cloudfront_url        # 公開URL（HTTPS）
+terraform output s3_frontend_bucket    # フロント配置先バケット
+```
+
+続けて [../docs/deploy.md](../docs/deploy.md) の「アプリ配置」（EC2 へのバックエンド配置）と、
+**フロントの S3 配信**（リポジトリルートで `./deploy/deploy-frontend.sh`）を実施する。
+CloudFront の作成・反映には数分〜十数分かかる。
 
 ## コスト・都度起動
 
