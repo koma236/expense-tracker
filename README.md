@@ -3,7 +3,19 @@
 家計簿アプリケーション（学習用課題）。
 
 収入・支出の記録、カテゴリ管理、月次の集計・グラフ表示、予算管理までを備えた家計簿アプリ。
-学習目的のため、これまで使ったことのない技術を採用している。構成は **Nuxt 3 フロントエンド ↔ Go の REST API ↔ MySQL** の3層。
+学習目的のため、これまで使ったことのない技術を採用している。構成は **Nuxt 3 フロントエンド ↔ Go の REST API ↔ MySQL** の3層で、AWS（CloudFront + S3 + EC2 + RDS）にデプロイしている。
+
+## デモ
+
+<!--
+  デモ動画をここに埋め込む。
+  GitHub では、この PR/Issue 編集画面に動画ファイル（mp4/mov など, 100MB 以内）を
+  ドラッグ&ドロップすると `https://github.com/user-attachments/assets/...` の URL が生成される。
+  その URL を下に貼ると README 上で再生できる。
+  例: https://github.com/user-attachments/assets/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+-->
+
+> 🎬 デモ動画は準備中。
 
 ## 主な機能
 
@@ -16,10 +28,31 @@
 
 ## 技術スタック
 
-- フロントエンド: Nuxt 3 (Vue 3) + Tailwind CSS + Chart.js
+- フロントエンド: Nuxt 3 (Vue 3) + Tailwind CSS + Chart.js（本番は `ssr: false` の静的SPA）
 - バックエンド: Go（[chi](https://github.com/go-chi/chi) ルーター + [sqlc](https://sqlc.dev/) による型安全な SQL）
 - データベース: MySQL 8.0（ローカルは Docker、本番は AWS RDS）
-- デプロイ: AWS EC2（アプリ）/ RDS（MySQL）
+- インフラ: AWS（CloudFront / S3 / EC2 / RDS）を Terraform で構築
+- 配信: CloudFront を前段に置き、フロントは S3、API は EC2 へルーティング（HTTPS・同一オリジン）
+
+## アーキテクチャ / デプロイ構成
+
+```text
+Browser ─HTTPS─▶ CloudFront (*.cloudfront.net)
+                  ├─ /*     → S3（フロント静的SPA, 非公開・OAC 経由のみ）
+                  └─ /api/* → EC2:80(nginx) → Go API :8080 (systemd) → RDS(MySQL 8.0)
+```
+
+- **フロント**は S3 に配置（完全非公開）、CloudFront(OAC) からのみ配信。SPA ルーティングは CloudFront Function で `/index.html` にフォールバック。
+- **API** は EC2 上の Go（systemd 常駐）。nginx が `/api` を Go にリバースプロキシ。EC2 の 80 番は CloudFront からのみ許可（直接アクセス不可）。
+- **DB** は RDS（MySQL 8.0、パブリックアクセス無効、EC2 のセキュリティグループからのみ 3306 許可）。
+- フロントと API は CloudFront 上で同一オリジンになるため **CORS 不要**。公開URLは HTTPS。
+- 学習用のためコストを抑え、**EC2 は使うときだけ起動する「都度起動」**運用。EC2 に Elastic IP を付与し、停止/起動しても公開URL（CloudFront）とオリジンは不変。
+
+詳細・構築/デプロイ手順は以下を参照:
+
+- インフラ構築（Terraform）: [terraform/README.md](terraform/README.md)
+- アプリのデプロイ手順・運用: [docs/deploy.md](docs/deploy.md)
+- 設計の背景: [アーキテクチャ設計書](docs/architecture.md)
 
 ## リポジトリ構成
 
@@ -27,7 +60,9 @@
 .
 ├── backend/          Go の REST API（→ backend/README.md）
 ├── frontend/         Nuxt 3 のフロントエンド（→ frontend/README.md）
-├── docs/             設計ドキュメント
+├── terraform/        AWS インフラ（IaC）（→ terraform/README.md）
+├── deploy/           デプロイ用ファイル（systemd / nginx / スクリプト）
+├── docs/             設計・デプロイドキュメント
 ├── compose.yml       ローカル MySQL（Docker Compose）
 └── CLAUDE.md         開発フロー・運用ルール
 ```
@@ -62,11 +97,25 @@ npm run dev             # → http://localhost:3000
 
 詳しい手順・各層の構成は [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) を参照。
 
-## デプロイ
+## デプロイ（AWS）
 
-本番は **AWS EC2（アプリ）+ RDS（MySQL）** 構成。学習用課題のためコストを抑え、**EC2 は使うときだけ起動する「都度起動」運用**とする。EC2 上では Docker を使わず、Go はバイナリ＋systemd、Nuxt は静的SPA を nginx で配信し、`/api` を Go API へリバースプロキシする（同一オリジンのため CORS 不要）。
+Terraform でインフラを構築し、アプリを配置する。概要のみ示す（詳細は各ドキュメント参照）。
 
-手順の詳細・コスト方針・起動/停止の運用は [デプロイ手順書](docs/deploy.md) を参照。デプロイ用ファイルは [deploy/](deploy/) にある。
+```bash
+# 1. インフラ構築（S3 / CloudFront / EC2 / RDS / EIP）
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # ssh_cidr, db_password を設定
+terraform init && terraform apply
+
+# 2. バックエンドを EC2 へ配置（SSH して実施）
+#    → docs/deploy.md の手順（マイグレーション・systemd・nginx）
+
+# 3. フロントを S3 へ配信（リポジトリルートで）
+./deploy/deploy-frontend.sh                     # build → S3 sync → CloudFront invalidation
+```
+
+- インフラの詳細: [terraform/README.md](terraform/README.md)
+- アプリ配置・コスト方針・都度起動の運用: [docs/deploy.md](docs/deploy.md)
 
 ## ドキュメント
 
@@ -75,6 +124,7 @@ npm run dev             # → http://localhost:3000
 - [DB 設計書](docs/db-design.md)
 - [画面設計書](docs/screen-spec.md)
 - [アーキテクチャ設計書](docs/architecture.md)
+- [デプロイ手順書](docs/deploy.md)
 
 ## 開発フロー
 
