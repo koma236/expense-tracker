@@ -6,7 +6,7 @@ const { label, prev, next } = useMonth()
   <div class="min-h-screen bg-gray-50 text-gray-800">
     <header class="bg-white border-b shadow-sm">
       <div class="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
-        <NuxtLink to="/transactions" class="text-lg font-bold text-indigo-600">
+        <NuxtLink to="/dashboard" class="text-lg font-bold text-indigo-600">
           家計簿
         </NuxtLink>
 
@@ -35,6 +35,15 @@ const { label, prev, next } = useMonth()
         <ul class="flex gap-1 text-sm">
           <li>
             <NuxtLink
+              to="/dashboard"
+              class="inline-block px-3 py-2 border-b-2 border-transparent hover:text-indigo-600"
+              active-class="!border-indigo-600 text-indigo-600 font-medium"
+            >
+              ダッシュボード
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink
               to="/transactions"
               class="inline-block px-3 py-2 border-b-2 border-transparent hover:text-indigo-600"
               active-class="!border-indigo-600 text-indigo-600 font-medium"
@@ -49,15 +58,6 @@ const { label, prev, next } = useMonth()
               active-class="!border-indigo-600 text-indigo-600 font-medium"
             >
               カテゴリ
-            </NuxtLink>
-          </li>
-          <li>
-            <NuxtLink
-              to="/dashboard"
-              class="inline-block px-3 py-2 border-b-2 border-transparent hover:text-indigo-600"
-              active-class="!border-indigo-600 text-indigo-600 font-medium"
-            >
-              ダッシュボード
             </NuxtLink>
           </li>
           <li>
