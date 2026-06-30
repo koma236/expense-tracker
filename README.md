@@ -7,15 +7,9 @@
 
 ## デモ
 
-<!--
-  デモ動画をここに埋め込む。
-  GitHub では、この PR/Issue 編集画面に動画ファイル（mp4/mov など, 100MB 以内）を
-  ドラッグ&ドロップすると `https://github.com/user-attachments/assets/...` の URL が生成される。
-  その URL を下に貼ると README 上で再生できる。
-  例: https://github.com/user-attachments/assets/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
--->
+収入・支出の登録から、月次サマリ・カテゴリ別グラフ・予算アラートまでの一連の操作デモ（本番環境）。
 
-> 🎬 デモ動画は準備中。
+https://github.com/user-attachments/assets/8b7b885f-05fc-4cc4-8181-684482255665
 
 ## 主な機能
 
